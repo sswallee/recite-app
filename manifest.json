@@ -1,0 +1,13 @@
+{
+  "name":"背书助手",
+  "short_name":"背书助手",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#f5f6fb",
+  "theme_color":"#5b67f1",
+  "description":"面向初中生和家长的分科背诵、错点追踪和间隔复习工具",
+  "icons":[
+    {"src":"icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"icon-512.png","sizes":"512x512","type":"image/png"}
+  ]
+}

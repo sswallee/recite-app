@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#5b67f1" />
+  <title>背书助手</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">学生 × 家长</div>
+      <h1>背书助手</h1>
+    </div>
+    <button id="installBtn" class="ghost" hidden>安装 App</button>
+  </header>
+
+  <main>
+    <section id="home" class="page active">
+      <div class="hero card">
+        <div>
+          <div class="muted">今天</div>
+          <h2 id="todayTitle">把该记住的，真正记住。</h2>
+          <p id="todaySummary">还没有任务，先添加一条背诵内容。</p>
+        </div>
+        <button class="primary" data-nav="add">+ 添加任务</button>
+      </div>
+
+      <div class="grid stats">
+        <div class="card stat"><span id="statToday">0</span><small>今日待复习</small></div>
+        <div class="card stat"><span id="statMastered">0</span><small>稳定掌握</small></div>
+        <div class="card stat"><span id="statWeak">0</span><small>薄弱点</small></div>
+      </div>
+
+      <div class="section-head"><h3>今日任务</h3><button class="link" data-nav="review">开始复习</button></div>
+      <div id="todayList" class="list"></div>
+
+      <div class="section-head"><h3>各科学习情况</h3></div>
+      <div id="subjectOverview" class="subject-overview"></div>
+    </section>
+
+    <section id="add" class="page">
+      <div class="section-head"><h2>添加背诵内容</h2></div>
+      <div class="card form-card">
+        <label>科目
+          <select id="subject">
+            <option>语文</option><option>英语单词</option><option>英语语法</option><option>英语课文</option>
+            <option>历史</option><option>道法</option><option>物理</option><option>化学</option>
+          </select>
+        </label>
+        <label>标题
+          <input id="title" placeholder="例如：岳阳楼记第三段 / Unit 3 单词" />
+        </label>
+        <label>内容
+          <textarea id="content" rows="10" placeholder="粘贴课文、知识点、公式、单词等。每行一个知识点效果最好。"></textarea>
+        </label>
+        <div class="row two">
+          <label>考试日期（可选）<input id="examDate" type="date" /></label>
+          <label>学习模式
+            <select id="mode">
+              <option value="auto">自动匹配</option>
+              <option value="recite">全文背诵</option>
+              <option value="cloze">挖空背诵</option>
+              <option value="qa">问答得分点</option>
+              <option value="spell">拼写/默写</option>
+              <option value="formula">公式理解</option>
+            </select>
+          </label>
+        </div>
+        <div class="hint" id="subjectHint"></div>
+        <button id="saveTask" class="primary wide">保存并开始学习</button>
+      </div>
+    </section>
+
+    <section id="review" class="page">
+      <div class="section-head"><h2>智能复习</h2><button id="shuffleBtn" class="ghost">随机抽背</button></div>
+      <div id="reviewEmpty" class="card empty">还没有需要复习的内容。</div>
+      <div id="reviewCard" class="card review-card" hidden>
+        <div class="pill" id="reviewSubject"></div>
+        <h3 id="reviewTitle"></h3>
+        <div class="muted" id="reviewProgress"></div>
+        <div id="promptArea" class="prompt"></div>
+        <button id="speakBtn" class="ghost wide">🔊 朗读</button>
+        <textarea id="answerInput" rows="5" placeholder="在这里默写/输入答案；也可以直接口头背诵后自评。"></textarea>
+        <div id="answerArea" class="answer" hidden></div>
+        <div class="row two">
+          <button id="showAnswer" class="secondary">看答案</button>
+          <button id="voiceBtn" class="secondary">🎙️ 语音背诵</button>
+        </div>
+        <div id="gradeBtns" class="grade-grid" hidden>
+          <button data-grade="again">不会</button>
+          <button data-grade="hard">有点卡</button>
+          <button data-grade="good">会了</button>
+          <button data-grade="easy">很熟</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="weak" class="page">
+      <div class="section-head"><h2>错点本</h2><button id="clearWeak" class="ghost">清理已掌握</button></div>
+      <div id="weakList" class="list"></div>
+    </section>
+
+    <section id="parent" class="page">
+      <div class="section-head"><h2>家长看板</h2></div>
+      <div class="grid stats">
+        <div class="card stat"><span id="pCompleted">0</span><small>本周复习次数</small></div>
+        <div class="card stat"><span id="pMastery">0%</span><small>稳定掌握率</small></div>
+        <div class="card stat"><span id="pStreak">0</span><small>连续学习天数</small></div>
+      </div>
+      <div class="card">
+        <h3>本周建议</h3>
+        <p id="parentAdvice" class="advice"></p>
+      </div>
+      <div class="card">
+        <div class="section-head"><h3>各科情况</h3></div>
+        <div id="parentSubjects"></div>
+      </div>
+      <div class="card">
+        <h3>数据备份</h3>
+        <p class="muted">数据默认只保存在当前设备。可以导出备份，换设备后再导入。</p>
+        <div class="row two"><button id="exportBtn" class="secondary">导出备份</button><label class="secondary filebtn">导入备份<input id="importFile" type="file" accept="application/json" hidden></label></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="active" data-nav="home">🏠<span>首页</span></button>
+    <button data-nav="review">🧠<span>复习</span></button>
+    <button data-nav="add">➕<span>添加</span></button>
+    <button data-nav="weak">📕<span>错点</span></button>
+    <button data-nav="parent">👪<span>家长</span></button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
