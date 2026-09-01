@@ -94,3 +94,86 @@ document.querySelector('#importFile').addEventListener('change',e=>{let f=e.targ
 let deferredPrompt;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.querySelector('#installBtn').hidden=false});document.querySelector('#installBtn').addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.querySelector('#installBtn').hidden=true});
 if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 renderAll();
+
+// ===== V2：照片 OCR 导入 =====
+const ocrStatusEl=document.querySelector('#ocrStatus');
+const ocrPreviewEl=document.querySelector('#ocrPreview');
+const contentEl=document.querySelector('#content');
+let ocrBusy=false;
+
+function cleanOCRText(text){
+ return String(text||'')
+   .replace(/\r/g,'')
+   .replace(/[ \t]+\n/g,'\n')
+   .replace(/\n{3,}/g,'\n\n')
+   .replace(/[ \t]{2,}/g,' ')
+   .trim();
+}
+function setOCRStatus(html,show=true){
+ if(!ocrStatusEl)return;
+ ocrStatusEl.hidden=!show;
+ ocrStatusEl.innerHTML=html;
+}
+function showOCRPreview(file){
+ if(!ocrPreviewEl||!file)return;
+ const url=URL.createObjectURL(file);
+ ocrPreviewEl.innerHTML=`<img src="${url}" alt="待识别图片">`;
+ ocrPreviewEl.hidden=false;
+ const img=ocrPreviewEl.querySelector('img');
+ img.onload=()=>URL.revokeObjectURL(url);
+}
+async function recognizeImages(files){
+ files=[...files].filter(f=>f.type.startsWith('image/'));
+ if(!files.length)return;
+ if(ocrBusy){alert('正在识别上一张图片，请稍后');return}
+ if(!window.Tesseract){
+   alert('照片识别组件没有加载成功。请确认当前设备已联网，再刷新页面重试。');
+   return;
+ }
+ ocrBusy=true;
+ let outputs=[];
+ try{
+   for(let i=0;i<files.length;i++){
+     const file=files[i];
+     showOCRPreview(file);
+     setOCRStatus(`正在识别第 ${i+1}/${files.length} 张图片…<div class="ocr-progress"><i id="ocrBar"></i></div><div class="muted" id="ocrDetail">正在准备中文和英文识别模型</div>`);
+     const result=await Tesseract.recognize(file,'chi_sim+eng',{
+       logger:m=>{
+         const bar=document.querySelector('#ocrBar');
+         const detail=document.querySelector('#ocrDetail');
+         if(bar&&typeof m.progress==='number')bar.style.width=Math.round(m.progress*100)+'%';
+         if(detail){
+           const map={
+             'loading tesseract core':'加载识别引擎',
+             'initializing tesseract':'初始化识别引擎',
+             'loading language traineddata':'下载中英文识别模型',
+             'initializing api':'初始化文字识别',
+             'recognizing text':'正在识别文字'
+           };
+           detail.textContent=(map[m.status]||m.status||'处理中')+(typeof m.progress==='number'?` · ${Math.round(m.progress*100)}%`:'');
+         }
+       }
+     });
+     const txt=cleanOCRText(result?.data?.text||'');
+     if(txt)outputs.push(txt);
+   }
+   const combined=outputs.join('\n\n');
+   if(!combined){setOCRStatus('没有识别到有效文字。建议重新拍照：保持页面平整、光线均匀、文字尽量占满画面。');return}
+   contentEl.value=contentEl.value.trim()?contentEl.value.trim()+'\n\n'+combined:combined;
+   setOCRStatus(`✅ 已识别 ${files.length} 张图片并填入内容框。<br><span class="muted">请快速检查人名、古文、生僻字、化学式和公式，OCR 对这些内容可能会有少量误识别。</span>`);
+   contentEl.focus();
+   contentEl.scrollIntoView({behavior:'smooth',block:'center'});
+ }catch(err){
+   console.error(err);
+   setOCRStatus('识别失败。请检查网络后重试；如果图片过大，可先截取只保留需要背诵的区域。');
+ }finally{
+   ocrBusy=false;
+   const cam=document.querySelector('#cameraInput');
+   const pho=document.querySelector('#photoInput');
+   if(cam)cam.value=''; if(pho)pho.value='';
+ }
+}
+const cameraInput=document.querySelector('#cameraInput');
+const photoInput=document.querySelector('#photoInput');
+if(cameraInput)cameraInput.addEventListener('change',e=>recognizeImages(e.target.files));
+if(photoInput)photoInput.addEventListener('change',e=>recognizeImages(e.target.files));

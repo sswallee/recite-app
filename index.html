@@ -54,8 +54,22 @@
         <label>标题
           <input id="title" placeholder="例如：岳阳楼记第三段 / Unit 3 单词" />
         </label>
+        <div class="import-panel">
+          <div class="import-title">📷 照片自动识别文字</div>
+          <p class="muted import-desc">可以直接拍课本、讲义或作业，也可以从相册选择图片。识别后会自动填入下面的“内容”框，你可以先修改再保存。</p>
+          <div class="row two">
+            <label class="secondary filebtn">📷 拍照识别
+              <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden />
+            </label>
+            <label class="secondary filebtn">🖼️ 相册选图
+              <input id="photoInput" type="file" accept="image/*" multiple hidden />
+            </label>
+          </div>
+          <div id="ocrStatus" class="ocr-status" hidden></div>
+          <div id="ocrPreview" class="ocr-preview" hidden></div>
+        </div>
         <label>内容
-          <textarea id="content" rows="10" placeholder="粘贴课文、知识点、公式、单词等。每行一个知识点效果最好。"></textarea>
+          <textarea id="content" rows="10" placeholder="可以粘贴文字，也可以用上方照片识别。识别后请检查错别字，再保存。"></textarea>
         </label>
         <div class="row two">
           <label>考试日期（可选）<input id="examDate" type="date" /></label>
@@ -135,6 +149,7 @@
     <button data-nav="parent">👪<span>家长</span></button>
   </nav>
 
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
